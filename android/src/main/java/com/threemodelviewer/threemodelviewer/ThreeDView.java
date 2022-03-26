@@ -1,0 +1,166 @@
+package com.threemodelviewer.threemodelviewer;
+
+import android.app.Activity;
+import android.content.Context;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.threemodelviewer.threemodelviewer.engine.ModelViewerGUI;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.camera.CameraController;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.collision.CollisionController;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.controller.TouchController;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.SceneLoader;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelRenderer;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelSurfaceView;
+import com.threemodelviewer.threemodelviewer.engine.util.event.EventListener;
+
+import java.net.URI;
+import java.util.EventObject;
+import java.util.Map;
+
+import io.flutter.plugin.platform.PlatformView;
+
+/**
+ * Created by robot on 2022/3/25 14:23.
+ *
+ * @author robot < robot >
+ */
+
+public class ThreeDView implements PlatformView , EventListener {
+    private Context context;
+    /**
+     * Type of model if file name has no extension (provided though content provider)
+     */
+    private int paramType;
+    /**
+     * The file to load. Passed as input parameter
+     */
+    private URI paramUri;
+    /**
+     * Background GL clear color. Default is light gray
+     */
+    private float[] backgroundColor = new float[]{0.0f, 0.0f, 0.0f, 0.0f};//透明
+//    private float[] backgroundColor = new float[]{0.0f, 0.0f, 0.0f, 1.0f};//black
+//    private float[] backgroundColor = new float[]{1f, 1f, 1.0f, 1.0f};//white
+
+    private ModelSurfaceView gLView;
+    private TouchController touchController;
+    private SceneLoader scene;
+    private ModelViewerGUI gui;
+    private CollisionController collisionController;
+
+
+    private CameraController cameraController;
+    public ThreeDView(Context context, Map<String,Object> args) {
+        this.context = context;
+        init(args);
+    }
+    private void init(Map<String,Object> args){
+        if (args != null) {
+            try {
+                if (args.get("src") != null) {
+                    paramUri = new URI(args.get("src").toString());
+                    Log.i("ModelActivity", "Params: uri '" + paramUri + "'");
+                }
+                paramType = args.get("type") != null ? Integer.parseInt(args.get("type").toString()) : -1;
+
+                if (args.get("backgroundColor") != null) {
+                    String[] backgroundColors = args.get("backgroundColor").toString().split(" ");
+                    backgroundColor[0] = Float.parseFloat(backgroundColors[0]);
+                    backgroundColor[1] = Float.parseFloat(backgroundColors[1]);
+                    backgroundColor[2] = Float.parseFloat(backgroundColors[2]);
+                    backgroundColor[3] = Float.parseFloat(backgroundColors[3]);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+        }
+
+        // Create our 3D scenario
+        Log.i("ModelActivity", "Loading Scene...");
+        scene = new SceneLoader(context, paramUri, paramType, gLView);
+
+
+        try {
+            Log.i("ModelActivity", "Loading GLSurfaceView...");
+            gLView = new ModelSurfaceView(context, backgroundColor, this.scene);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            gLView.setLayoutParams(params);
+            gLView.addListener(this);
+//            gLView.toggleLights();
+            scene.setView(gLView);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Log.i("ModelActivity", "Loading TouchController...");
+            touchController = new TouchController(context);
+            touchController.addListener(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Log.i("ModelActivity", "Loading CollisionController...");
+            collisionController = new CollisionController(gLView, scene);
+            collisionController.addListener(scene);
+            touchController.addListener(collisionController);
+            touchController.addListener(scene);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Log.i("ModelActivity", "Loading CameraController...");
+            cameraController = new CameraController(scene.getCamera());
+            gLView.getModelRenderer().addListener(cameraController);
+            touchController.addListener(cameraController);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            // TODO: finish UI implementation
+            Log.i("ModelActivity", "Loading GUI...");
+            gui = new ModelViewerGUI(gLView, scene);
+            touchController.addListener(gui);
+            gLView.addListener(gui);
+            scene.addGUIObject(gui);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // load model
+        scene.init();
+    }
+
+    @Override
+    public View getView() {
+        return gLView;
+    }
+
+
+    @Override
+    public void dispose() {
+    }
+
+    @Override
+    public boolean onEvent(EventObject event) {
+        if (event instanceof ModelRenderer.ViewEvent) {
+            ModelRenderer.ViewEvent viewEvent = (ModelRenderer.ViewEvent) event;
+            if (viewEvent.getCode() == ModelRenderer.ViewEvent.Code.SURFACE_CHANGED) {
+                touchController.setSize(viewEvent.getWidth(), viewEvent.getHeight());
+                gLView.setTouchController(touchController);
+
+                // process event in GUI
+                if (gui != null) {
+                    gui.setSize(viewEvent.getWidth(), viewEvent.getHeight());
+                    gui.setVisible(true);
+                }
+            }
+        }
+        return true;
+    }
+}
