@@ -47,7 +47,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -57,10 +56,18 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: Container(
-            height: 200,
-            width: 200,
+            height: 600,
+            width: 600,
             color: Colors.red,
-            child: const ThreeView(src: "assets/ship.obj", modelType: ModelType.assets,),
+            child: const ThreeView(
+              src: "assets/ship.obj",
+              modelType: ModelType.assets,
+              srcDrawable: [
+                "assets/ship.bmp",
+                "assets/ship.mtl",
+                "assets/ship.png",
+              ],
+            ),
           ),
         ),
       ),

@@ -121,7 +121,7 @@ public class SceneLoader implements LoadListener, EventListener {
     /**
      * Light toggle feature: we have 3 states: no light, light, light + rotation
      */
-    private boolean rotatingLight = true;
+    private boolean rotatingLight = false;
     /**
      * Light toggle feature: whether to draw using lights
      */
@@ -711,7 +711,7 @@ public class SceneLoader implements LoadListener, EventListener {
     public boolean onEvent(EventObject event) {
         //Log.v("SceneLoader","Processing event... "+event);
         if (event instanceof TouchEvent) {
-            userHasInteracted = true;
+//            userHasInteracted = true;
         } else if (event instanceof CollisionEvent) {
             Object3DData objectToSelect = ((CollisionEvent) event).getObject();
             Object3DData point = ((CollisionEvent) event).getPoint();

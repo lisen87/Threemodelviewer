@@ -1,6 +1,5 @@
 package com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -24,10 +23,6 @@ public abstract class LoaderTask extends AsyncTask<Void, String, List<Object3DDa
 	 * Callback to notify of events
 	 */
 	private final LoadListener callback;
-	/**
-	 * The dialog that will show the progress of the loading
-	 */
-	private final ProgressDialog dialog;
 
 	/**
 	 * Build a new progress dialog for loading the data model asynchronously
@@ -36,17 +31,12 @@ public abstract class LoaderTask extends AsyncTask<Void, String, List<Object3DDa
 	 */
 	public LoaderTask(Context parent, URI uri, LoadListener callback) {
 		this.uri = uri;
-		this.dialog = new ProgressDialog(parent);
 		this.callback = callback; }
 
 
 	@Override
 	protected void onPreExecute() {
 		super.onPreExecute();
-		this.dialog.setMessage("Loading...");
-		this.dialog.setCancelable(false);
-		//this.dialog.getWindow().setGravity(Gravity.BOTTOM);
-		this.dialog.show();
 	}
 
 
@@ -73,15 +63,11 @@ public abstract class LoaderTask extends AsyncTask<Void, String, List<Object3DDa
 	@Override
 	protected void onProgressUpdate(String... values) {
 		super.onProgressUpdate(values);
-		this.dialog.setMessage(values[0]);
 	}
 
 	@Override
 	protected void onPostExecute(List<Object3DData> data) {
 		super.onPostExecute(data);
-		if (dialog.isShowing()) {
-			dialog.dismiss();
-		}
 	}
 
 	@Override

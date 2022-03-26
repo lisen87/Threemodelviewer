@@ -718,7 +718,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer {
 
             // Draw bounding box
             if (scene.isDrawBoundingBox() && objData.isSolid() || scene.getSelectedObject() == objData) {
-                drawBoundingBox(viewMatrix, projectionMatrix, lightPosInWorldSpace, colorMask, cameraPosInWorldSpace, objData, changed);
+//                drawBoundingBox(viewMatrix, projectionMatrix, lightPosInWorldSpace, colorMask, cameraPosInWorldSpace, objData, changed);
             }
 
             // Draw normals

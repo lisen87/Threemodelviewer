@@ -63,7 +63,7 @@ public final class ModelViewerGUI extends GUI {
         fps.setParent(this);
         fps.setRelativeScale(new float[]{0.15f,0.15f,0.15f});
 
-        addWidget(fps);
+//        addWidget(fps);
 
         fps.setPosition(GUI.POSITION_TOP_LEFT);
         //addBackground(fps).setColor(new float[]{0.25f, 0.25f, 0.25f, 0.25f});

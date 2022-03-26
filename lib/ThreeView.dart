@@ -11,9 +11,23 @@ import 'package:path_provider/path_provider.dart';
 class ThreeView extends StatefulWidget {
   final Function(int type,int progress)? loadCallback;
   final String src;
+  final List<String>? srcDrawable;
   final ModelType modelType;
   final Widget? placeholder;
-  const ThreeView({Key? key,required this.src,required this.modelType,this.placeholder,this.loadCallback}) : super(key: key);
+
+  /// 安卓支持：obj,stl, dae ，ios支持：obj，dae ，
+
+  ///src: assets/xxx.obj 或 文件路径 或 http:xxxx.obj
+  ///modelType:   assets,file, http,
+  ///srcDrawable 有些 obj 需要 图片等资源在和obj文件同一文件夹下才正常显示，当为 modelType= assets才需要
+  const ThreeView(
+      {Key? key,
+      required this.src,
+      required this.modelType,
+      this.srcDrawable,
+      this.placeholder,
+      this.loadCallback})
+      : super(key: key);
   @override
   State<StatefulWidget> createState() {
     return ThreeViewState();
@@ -29,9 +43,7 @@ class ThreeViewState extends State<ThreeView> {
       future: getSrcByModelType(),
       initialData: null,
       builder: (BuildContext context, AsyncSnapshot<Uri> snapshot) {
-        print(snapshot.data);
         if (snapshot.data != null && snapshot.connectionState == ConnectionState.done) {
-          print(snapshot.data);
           if(Platform.isAndroid){
             ///0 = obj, 1 = stl, 2 = dae
             int type = -1;
@@ -55,6 +67,7 @@ class ThreeViewState extends State<ThreeView> {
               viewType: viewType,
               creationParams: <String, dynamic>{
                 'src': snapshot.data,
+                'type':snapshot.data.toString().toLowerCase(),
               },
               creationParamsCodec: const StandardMessageCodec(),
             );
@@ -66,28 +79,51 @@ class ThreeViewState extends State<ThreeView> {
     );
   }
   CancelToken? _cancelToken;
+
+  _copy(String assetPath) async {
+    String fileName = assetPath;
+    if(assetPath.contains("/")){
+      fileName = assetPath.split("/").last;
+    }
+    Directory dir = await getTemporaryDirectory();
+    File f = File(dir.path+"/models/"+fileName);
+    bool exists = await f.exists();
+    if(!exists){
+      var bytes = await rootBundle.load(assetPath);
+      final buffer = bytes.buffer;
+      f.create(recursive: true);
+      await f.writeAsBytes(
+          buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
+    }
+  }
+
   ///返回文件路径 uri
   Future<Uri> getSrcByModelType() async {
 
     if(widget.modelType == ModelType.assets){
       ///assets
+
+      if(widget.srcDrawable != null){
+        for (String element in widget.srcDrawable!) {
+          _copy(element);
+        }
+      }
+
       String fileName = widget.src;
       if(widget.src.contains("/")){
         fileName = widget.src.split("/").last;
       }
 
-      var bytes = await rootBundle.load(widget.src);
       Directory dir = await getTemporaryDirectory();
-      final buffer = bytes.buffer;
       File f = File(dir.path+"/models/"+fileName);
       if(await f.exists() && await f.length() > 0){
         return f.uri;
       }else{
         f.create(recursive: true);
-        print(" =fileName= "+f.path);
+        var bytes = await rootBundle.load(widget.src);
+        final buffer = bytes.buffer;
         await f.writeAsBytes(
             buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
-        print(" === "+f.path);
         return f.uri;
       }
 

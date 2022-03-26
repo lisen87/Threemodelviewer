@@ -1,6 +1,8 @@
 package com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -36,7 +38,9 @@ public class ModelSurfaceView extends GLSurfaceView implements EventListener {
 
 			// Create an OpenGL ES 2.0 context.
 			setEGLContextClientVersion(2);
-
+			setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+			getHolder() .setFormat(PixelFormat.TRANSLUCENT);
+			setBackgroundColor(Color.TRANSPARENT);
 			// This is the actual renderer of the 3D space
 			mRenderer = new ModelRenderer(parent, this, backgroundColor, scene);
 			mRenderer.addListener(this);
