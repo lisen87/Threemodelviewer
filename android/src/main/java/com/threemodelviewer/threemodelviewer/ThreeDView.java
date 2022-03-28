@@ -1,7 +1,7 @@
 package com.threemodelviewer.threemodelviewer;
 
-import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,10 +13,12 @@ import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.cont
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.SceneLoader;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelRenderer;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelSurfaceView;
+import com.threemodelviewer.threemodelviewer.engine.util.android.ContentUtils;
 import com.threemodelviewer.threemodelviewer.engine.util.event.EventListener;
 
 import java.net.URI;
 import java.util.EventObject;
+import java.util.Iterator;
 import java.util.Map;
 
 import io.flutter.plugin.platform.PlatformView;
@@ -62,6 +64,15 @@ public class ThreeDView implements PlatformView , EventListener {
                 if (args.get("src") != null) {
                     paramUri = new URI(args.get("src").toString());
                     Log.i("ModelActivity", "Params: uri '" + paramUri + "'");
+                }
+                if (args.get("srcDrawable") != null){
+                    Map<String,String> srcDrawable = (Map<String, String>) args.get("srcDrawable");
+                    ContentUtils.clearDocumentsProvided();
+                    Iterator<Map.Entry<String, String>> iterator = srcDrawable.entrySet().iterator();
+                    while (iterator.hasNext()){
+                        Map.Entry<String, String> next = iterator.next();
+                        ContentUtils.addUri(next.getKey(), Uri.parse(next.getValue()));
+                    }
                 }
                 paramType = args.get("type") != null ? Integer.parseInt(args.get("type").toString()) : -1;
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -54,21 +56,46 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: Container(
-            height: 600,
-            width: 600,
-            color: Colors.red,
-            child: const ThreeView(
-              src: "assets/ship.obj",
-              modelType: ModelType.assets,
-              srcDrawable: [
-                "assets/ship.bmp",
-                "assets/ship.mtl",
-                "assets/ship.png",
-              ],
+        body: Row(
+          children: [
+            // Container(
+            //   height: 300,
+            //   width: 300,
+            //   color: Colors.red,
+            //   child: const ThreeView(
+            //     src: "assets/ship.obj",
+            //     modelType: ModelType.assets,
+            //     srcDrawable: [
+            //       "assets/ship.bmp",
+            //       "assets/ship.mtl",
+            //       "assets/ship.png",
+            //     ],
+            //   ),
+            // ),
+            // Container(
+            //   height: 300,
+            //   width: 300,
+            //   color: Colors.green,
+            //   child: const ThreeView(
+            //     src: "文件路径path",
+            //     modelType: ModelType.file,
+            //   ),
+            // ),
+            Container(
+              height: 300,
+              width: 300,
+              color: Colors.blue,
+              child: const ThreeView(
+                src: "http://xingchen.p1.sdqttx.net:91/test/ship.obj",
+                modelType: ModelType.http,
+                srcDrawable: [
+                  "http://xingchen.p1.sdqttx.net:91/test/ship.bmp",
+                  "http://xingchen.p1.sdqttx.net:91/test/ship.mtl",
+                  "http://xingchen.p1.sdqttx.net:91/test/ship.png",
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

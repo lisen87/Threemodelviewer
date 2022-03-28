@@ -711,7 +711,7 @@ public class SceneLoader implements LoadListener, EventListener {
     public boolean onEvent(EventObject event) {
         //Log.v("SceneLoader","Processing event... "+event);
         if (event instanceof TouchEvent) {
-//            userHasInteracted = true;
+            userHasInteracted = true;
         } else if (event instanceof CollisionEvent) {
             Object3DData objectToSelect = ((CollisionEvent) event).getObject();
             Object3DData point = ((CollisionEvent) event).getPoint();

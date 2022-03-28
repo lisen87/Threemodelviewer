@@ -36,7 +36,7 @@ android {
 def flutterRoot = 'F:\\flutter\\flutter_windows_2.5.0-stable\\flutter'
 dependencies {
     implementation 'androidx.core:core:1.7.0'
-//    compileOnly files("$flutterRoot/bin/cache/artifacts/engine/android-arm/flutter.jar")
+    compileOnly files("$flutterRoot/bin/cache/artifacts/engine/android-arm/flutter.jar")
 }
 
 

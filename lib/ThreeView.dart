@@ -6,6 +6,47 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Created by robot on 2022/3/26 12:52.
+/// Container(
+///               height: 300,
+///               width: 300,
+///               color: Colors.blue,
+///               child: const ThreeView(
+///                 src: "http://xingchen.p1.sdqttx.net:91/test/ship.obj",
+///                 modelType: ModelType.http,
+///                 srcDrawable: [
+///                   "http://xingchen.p1.sdqttx.net:91/test/ship.bmp",
+///                   "http://xingchen.p1.sdqttx.net:91/test/ship.mtl",
+///                   "http://xingchen.p1.sdqttx.net:91/test/ship.png",
+///                 ],
+///               ),
+///             ),
+///
+///
+/// Container(
+///   height: 300,
+///   width: 300,
+///   color: Colors.green,
+///   child: const ThreeView(
+///     src: "assets/ship.obj",
+///     modelType: ModelType.file,
+///     srcDrawable: [
+///       "assets/ship.bmp",
+///       "assets/ship.mtl",
+///       "assets/ship.png",
+///     ],
+///   ),
+/// ),
+///
+///
+/// Container(
+///              height: 300,
+///              width: 300,
+///              color: Colors.green,
+///              child: const ThreeView(
+///                src: "文件路径path",
+///                modelType: ModelType.file,
+///              ),
+///            ),
 /// @author robot < robot >
 
 class ThreeView extends StatefulWidget {
@@ -13,6 +54,7 @@ class ThreeView extends StatefulWidget {
   final String src;
   final List<String>? srcDrawable;
   final ModelType modelType;
+  final bool useCache;
   final Widget? placeholder;
 
   /// 安卓支持：obj,stl, dae ，ios支持：obj，dae ，
@@ -25,6 +67,7 @@ class ThreeView extends StatefulWidget {
       required this.src,
       required this.modelType,
       this.srcDrawable,
+      this.useCache = true,
       this.placeholder,
       this.loadCallback})
       : super(key: key);
@@ -37,6 +80,7 @@ class ThreeView extends StatefulWidget {
 
 class ThreeViewState extends State<ThreeView> {
   final String viewType = "3dModelViewer";
+  Map<String ,String> srcDrawableUris = {};
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uri>(
@@ -59,6 +103,7 @@ class ThreeViewState extends State<ThreeView> {
               creationParams: <String, dynamic>{
                 'src': snapshot.data.toString(),
                 'type':type,
+                'srcDrawable':srcDrawableUris,
               },
               creationParamsCodec: const StandardMessageCodec(),
             );
@@ -68,6 +113,7 @@ class ThreeViewState extends State<ThreeView> {
               creationParams: <String, dynamic>{
                 'src': snapshot.data,
                 'type':snapshot.data.toString().toLowerCase(),
+                'srcDrawable':srcDrawableUris,
               },
               creationParamsCodec: const StandardMessageCodec(),
             );
@@ -88,13 +134,14 @@ class ThreeViewState extends State<ThreeView> {
     Directory dir = await getTemporaryDirectory();
     File f = File(dir.path+"/models/"+fileName);
     bool exists = await f.exists();
-    if(!exists){
+    if(!exists || await f.length() == 0){
       var bytes = await rootBundle.load(assetPath);
       final buffer = bytes.buffer;
       f.create(recursive: true);
       await f.writeAsBytes(
           buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
     }
+    srcDrawableUris[fileName] = f.uri.toString();
   }
 
   ///返回文件路径 uri
@@ -108,6 +155,7 @@ class ThreeViewState extends State<ThreeView> {
           _copy(element);
         }
       }
+
 
       String fileName = widget.src;
       if(widget.src.contains("/")){
@@ -129,18 +177,47 @@ class ThreeViewState extends State<ThreeView> {
 
     }else if(widget.modelType == ModelType.http){
       _cancelToken = CancelToken();
-      String fileName = widget.src.split("/").last;
-      Dio dio = Dio();
-      String savePath = (await getTemporaryDirectory()).path +"/models/"+fileName ;
-      Response response = await dio.download(widget.src, savePath, cancelToken: _cancelToken);
 
-      if(response.statusCode == 200){
-        return Uri.file(savePath);
+      if(widget.srcDrawable != null){
+        for (String element in widget.srcDrawable!) {
+
+          String fileName = element;
+          if(element.contains("/")){
+            fileName = element.split("/").last;
+          }
+          Directory dir = await getTemporaryDirectory();
+          File f = File(dir.path+"/models/"+fileName);
+          bool exists = await f.exists();
+          if(!widget.useCache || !exists || await f.length() == 0){
+            Dio dio = Dio();
+            Response response = await dio.download(element, f.path, cancelToken: _cancelToken);
+            if(response.statusCode == 200){
+              srcDrawableUris[fileName] = f.uri.toString();
+            }
+          }else{
+            srcDrawableUris[fileName] = f.uri.toString();
+          }
+        }
+      }
+
+      String fileName = widget.src.split("/").last;
+
+      Directory dir = await getTemporaryDirectory();
+      File f = File(dir.path+"/models/"+fileName);
+      if(!widget.useCache || !await f.exists() || await f.length() == 0){
+        Dio dio = Dio();
+        Response response = await dio.download(widget.src, f.path, cancelToken: _cancelToken);
+
+        if(response.statusCode == 200){
+          return f.uri;
+        }else{
+          return Uri.parse(response.statusCode.toString());
+        }
       }else{
-        return Uri.parse(response.statusCode.toString());
+        return f.uri;
       }
     }else{
-      return Uri.parse(widget.src);
+      return File(widget.src).uri;
     }
   }
   @override
