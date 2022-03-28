@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -278,7 +279,7 @@ public class SceneLoader implements LoadListener, EventListener {
     }
 
     private void animateCamera() {
-        camera.translateCamera(0.0005f, 0f);
+        camera.translateCamera(0.0007f, 0f);
     }
 
     public final synchronized void addObject(Object3DData obj) {
@@ -533,6 +534,10 @@ public class SceneLoader implements LoadListener, EventListener {
         this.camera.setChanged(true);
     }
 
+    public void setUserHasInteracted(boolean userHasInteracted) {
+        this.userHasInteracted = userHasInteracted;
+    }
+
     public final boolean isVRGlasses() {
         return isVRGlasses;
     }
@@ -706,12 +711,28 @@ public class SceneLoader implements LoadListener, EventListener {
     public void setView(ModelSurfaceView view) {
         this.glView = view;
     }
-
+    private boolean isHasClickEvent = false;
+    private final Handler handler = new Handler();
     @Override
     public boolean onEvent(EventObject event) {
         //Log.v("SceneLoader","Processing event... "+event);
         if (event instanceof TouchEvent) {
             userHasInteracted = true;
+            TouchEvent.Action action = ((TouchEvent) event).getAction();
+            if (action == TouchEvent.PINCH || action == TouchEvent.ROTATE){
+                isHasClickEvent = true;
+            }
+            if (isHasClickEvent && action == TouchEvent.Action.UP){
+                handler.removeCallbacksAndMessages(null);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        userHasInteracted = false;
+                        isHasClickEvent = false;
+                    }
+                },2000);
+            }
+            Log.e(getClass().getSimpleName(), "onEvent: " + action.toString());
         } else if (event instanceof CollisionEvent) {
             Object3DData objectToSelect = ((CollisionEvent) event).getObject();
             Object3DData point = ((CollisionEvent) event).getPoint();
@@ -731,7 +752,9 @@ public class SceneLoader implements LoadListener, EventListener {
         }
         return true;
     }
-
+    public void destroy(){
+        handler.removeCallbacksAndMessages(null);
+    }
     private void rescale(List<Object3DData> datas, float newScale, float[] newPosition) {
 
         //if (true) return;

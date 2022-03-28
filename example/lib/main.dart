@@ -82,12 +82,13 @@ class _MyAppState extends State<MyApp> {
             //   ),
             // ),
             Container(
-              height: 300,
-              width: 300,
+              height: 600,
+              width: 600,
               color: Colors.blue,
               child: const ThreeView(
                 src: "http://xingchen.p1.sdqttx.net:91/test/ship.obj",
                 modelType: ModelType.http,
+                enableTouch: false,
                 srcDrawable: [
                   "http://xingchen.p1.sdqttx.net:91/test/ship.bmp",
                   "http://xingchen.p1.sdqttx.net:91/test/ship.mtl",

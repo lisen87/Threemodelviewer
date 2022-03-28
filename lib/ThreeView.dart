@@ -55,6 +55,7 @@ class ThreeView extends StatefulWidget {
   final List<String>? srcDrawable;
   final ModelType modelType;
   final bool useCache;
+  final bool enableTouch;
   final Widget? placeholder;
 
   /// 安卓支持：obj,stl, dae ，ios支持：obj，dae ，
@@ -68,6 +69,7 @@ class ThreeView extends StatefulWidget {
       required this.modelType,
       this.srcDrawable,
       this.useCache = true,
+      this.enableTouch = true,
       this.placeholder,
       this.loadCallback})
       : super(key: key);
@@ -103,6 +105,7 @@ class ThreeViewState extends State<ThreeView> {
               creationParams: <String, dynamic>{
                 'src': snapshot.data.toString(),
                 'type':type,
+                'enableTouch':widget.enableTouch,
                 'srcDrawable':srcDrawableUris,
               },
               creationParamsCodec: const StandardMessageCodec(),
@@ -113,6 +116,7 @@ class ThreeViewState extends State<ThreeView> {
               creationParams: <String, dynamic>{
                 'src': snapshot.data,
                 'type':snapshot.data.toString().toLowerCase(),
+                'enableTouch':widget.enableTouch,
                 'srcDrawable':srcDrawableUris,
               },
               creationParamsCodec: const StandardMessageCodec(),

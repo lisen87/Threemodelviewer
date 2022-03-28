@@ -7,9 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.threemodelviewer.threemodelviewer.engine.ModelViewerGUI;
+import com.threemodelviewer.threemodelviewer.engine.SelfFishLinearLayout;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.camera.CameraController;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.collision.CollisionController;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.controller.TouchController;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.model.Camera;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.SceneLoader;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelRenderer;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelSurfaceView;
@@ -54,11 +56,16 @@ public class ThreeDView implements PlatformView , EventListener {
 
 
     private CameraController cameraController;
+    private SelfFishLinearLayout selfFishLinearLayout;
     public ThreeDView(Context context, Map<String,Object> args) {
         this.context = context;
+        selfFishLinearLayout = new SelfFishLinearLayout(context);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        selfFishLinearLayout.setLayoutParams(params);
         init(args);
     }
     private void init(Map<String,Object> args){
+        boolean enableTouch = false;
         if (args != null) {
             try {
                 if (args.get("src") != null) {
@@ -83,6 +90,10 @@ public class ThreeDView implements PlatformView , EventListener {
                     backgroundColor[2] = Float.parseFloat(backgroundColors[2]);
                     backgroundColor[3] = Float.parseFloat(backgroundColors[3]);
                 }
+                if (args.get("enableTouch") != null){
+                    enableTouch = (boolean) args.get("enableTouch");
+                    selfFishLinearLayout.setIntercept(!enableTouch);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -97,8 +108,8 @@ public class ThreeDView implements PlatformView , EventListener {
         try {
             Log.i("ModelActivity", "Loading GLSurfaceView...");
             gLView = new ModelSurfaceView(context, backgroundColor, this.scene);
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            gLView.setLayoutParams(params);
+//            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            gLView.setLayoutParams(selfFishLinearLayout.getLayoutParams());
             gLView.addListener(this);
 //            gLView.toggleLights();
             scene.setView(gLView);
@@ -129,6 +140,13 @@ public class ThreeDView implements PlatformView , EventListener {
             cameraController = new CameraController(scene.getCamera());
             gLView.getModelRenderer().addListener(cameraController);
             touchController.addListener(cameraController);
+
+            scene.getCamera().setOnStopTranslate(new Camera.OnStopTranslate() {
+                @Override
+                public void onStop() {
+                    scene.setUserHasInteracted(false);
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -149,12 +167,16 @@ public class ThreeDView implements PlatformView , EventListener {
 
     @Override
     public View getView() {
-        return gLView;
+        if (selfFishLinearLayout.getChildCount() == 0){
+            selfFishLinearLayout.addView(gLView);
+        }
+        return selfFishLinearLayout;
     }
 
 
     @Override
     public void dispose() {
+        scene.destroy();
     }
 
     @Override

@@ -99,6 +99,7 @@ public class TouchController {
 
 		switch (motionEvent.getActionMasked()) {
 			case MotionEvent.ACTION_UP:
+				fireEvent(new TouchEvent(this, TouchEvent.UP, width, height, x1, y1));
 			case MotionEvent.ACTION_CANCEL:
 			case MotionEvent.ACTION_POINTER_UP:
 			case MotionEvent.ACTION_HOVER_EXIT:

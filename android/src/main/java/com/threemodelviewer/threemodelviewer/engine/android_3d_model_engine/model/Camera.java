@@ -54,7 +54,7 @@ public class Camera {
     }
 
     public synchronized void animate() {
-        if (lastAction == null || animationCounter == 0) {
+        if (lastAction == null || animationCounter <= 70) {
             lastAction = null;
             animationCounter = 100;
             return;
@@ -268,6 +268,11 @@ public class Camera {
 
         setChanged(true);
 
+        if (onStopTranslate != null){
+            if (animationCounter <= 71){
+                onStopTranslate.onStop();
+            }
+        }
     }
 
     private static void createRotationMatrixAroundVector(float[] matrix, int offset, float angle, float x, float y,
@@ -477,4 +482,13 @@ public class Camera {
         return pos[2];
     }
 
+    public interface OnStopTranslate{
+        void onStop();
+    }
+    
+    private OnStopTranslate onStopTranslate;
+
+    public void setOnStopTranslate(OnStopTranslate onStopTranslate) {
+        this.onStopTranslate = onStopTranslate;
+    }
 }
