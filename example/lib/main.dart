@@ -75,8 +75,8 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               child: const Text("禁用手势"),
               onPressed: () {
-              Threemodelviewer.enableTouch(false);
-            },
+                Threemodelviewer.enableTouch(false);
+              },
             ),
             ElevatedButton(
               child: const Text("开启手势"),
