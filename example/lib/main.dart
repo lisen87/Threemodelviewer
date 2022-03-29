@@ -59,11 +59,13 @@ class _MyAppState extends State<MyApp> {
               width: 200,
               color: Colors.blue,
               child:  ThreeView(
-                src: "assets/cowboy.dae",
+                src: "assets/ship.obj",
                 modelType: ModelType.assets,
                 enableTouch: true,
                 srcDrawable: const [
-                  "assets/cowboy.png",
+                  "assets/ship.mtl",
+                  "assets/ship.bmp",
+                  "assets/ship.png",
                 ],
                 loadCallback: (statusInfo){
                   print("loadCallback == "+ statusInfo.status.toString());
