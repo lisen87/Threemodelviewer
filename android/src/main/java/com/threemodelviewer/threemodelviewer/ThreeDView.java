@@ -2,6 +2,8 @@ package com.threemodelviewer.threemodelviewer;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,8 @@ import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.came
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.collision.CollisionController;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.controller.TouchController;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.model.Camera;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.model.Object3DData;
+import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.LoadListener;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.SceneLoader;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelRenderer;
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.view.ModelSurfaceView;
@@ -23,6 +27,10 @@ import java.util.EventObject;
 import java.util.Iterator;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.platform.PlatformView;
 
 /**
@@ -31,7 +39,7 @@ import io.flutter.plugin.platform.PlatformView;
  * @author robot < robot >
  */
 
-public class ThreeDView implements PlatformView , EventListener {
+public class ThreeDView implements PlatformView , EventListener , MethodChannel.MethodCallHandler {
     private Context context;
     /**
      * Type of model if file name has no extension (provided though content provider)
@@ -57,15 +65,19 @@ public class ThreeDView implements PlatformView , EventListener {
 
     private CameraController cameraController;
     private SelfFishLinearLayout selfFishLinearLayout;
-    public ThreeDView(Context context, Map<String,Object> args) {
+
+    private MethodChannel channel;
+    public ThreeDView(Context context, BinaryMessenger messenger,Map<String, Object> args) {
         this.context = context;
         selfFishLinearLayout = new SelfFishLinearLayout(context);
         ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         selfFishLinearLayout.setLayoutParams(params);
+
+        channel = new MethodChannel(messenger, "ThreeModelViewerPlugin");
+        channel.setMethodCallHandler(this);
         init(args);
     }
     private void init(Map<String,Object> args){
-        boolean enableTouch = false;
         if (args != null) {
             try {
                 if (args.get("src") != null) {
@@ -91,8 +103,10 @@ public class ThreeDView implements PlatformView , EventListener {
                     backgroundColor[3] = Float.parseFloat(backgroundColors[3]);
                 }
                 if (args.get("enableTouch") != null){
-                    enableTouch = (boolean) args.get("enableTouch");
-                    selfFishLinearLayout.setIntercept(!enableTouch);
+                    Boolean enableTouch = (Boolean) args.get("enableTouch");
+                    if (enableTouch != null){
+                        selfFishLinearLayout.setIntercept(!enableTouch);
+                    }
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -161,21 +175,80 @@ public class ThreeDView implements PlatformView , EventListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        scene.setCallback(new LoadListener() {
+            @Override
+            public void onStart() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod("onStart","");
+                    }
+                });
+            }
+
+            @Override
+            public void onProgress(String progress) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod("onProgress",progress);
+                    }
+                });
+            }
+
+            @Override
+            public void onLoadError(Exception ex) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod("onLoadError",ex.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onLoad(Object3DData data) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod("onLoad",data.getName());
+                    }
+                });
+            }
+
+            @Override
+            public void onLoadComplete() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        channel.invokeMethod("onLoadComplete","");
+                    }
+                });
+            }
+        });
+
+
         // load model
         scene.init();
+
     }
 
+    private Handler handler = new Handler(Looper.getMainLooper());
     @Override
     public View getView() {
         if (selfFishLinearLayout.getChildCount() == 0){
             selfFishLinearLayout.addView(gLView);
         }
+        Log.e("TAG", "getView: "+selfFishLinearLayout );
         return selfFishLinearLayout;
     }
 
 
     @Override
     public void dispose() {
+        handler.removeCallbacksAndMessages(null);
+        channel.setMethodCallHandler(null);
         scene.destroy();
     }
 
@@ -195,5 +268,21 @@ public class ThreeDView implements PlatformView , EventListener {
             }
         }
         return true;
+    }
+
+    @Override
+    public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.method.equals("enableTouch")){
+            Boolean enable = call.argument("enableTouch");
+            if (selfFishLinearLayout != null && enable != null){
+                selfFishLinearLayout.setIntercept(!enable);
+            }
+            Log.e(getClass().getSimpleName(), "onMethodCall: enableTouch = "+enable );
+            result.success("");
+        }else if (call.method.equals("getPlatformVersion")) {
+            result.success("Android " + android.os.Build.VERSION.RELEASE);
+        } else{
+            result.notImplemented();
+        }
     }
 }

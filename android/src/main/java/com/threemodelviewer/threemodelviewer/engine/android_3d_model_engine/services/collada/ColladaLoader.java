@@ -1,7 +1,6 @@
 package com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.services.collada;
 
 import android.opengl.GLES20;
-import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.threemodelviewer.threemodelviewer.engine.android_3d_model_engine.animation.Animation;
@@ -31,6 +30,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+
 public final class ColladaLoader {
 
     /**
@@ -56,7 +57,7 @@ public final class ColladaLoader {
         try (InputStream is = ContentUtils.getInputStream(uri)) {
 
             Log.i("ColladaLoaderTask", "Parsing file... " + uri.toString());
-            callback.onProgress("Loading file...");
+            callback.onProgress("1");
             final XmlNode xml = XmlParser.parse(is);
 
             // get authoring tool
@@ -74,7 +75,7 @@ public final class ColladaLoader {
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
             Log.i("ColladaLoaderTask", "Loading visual nodes...");
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
-            callback.onProgress("Loading visual nodes...");
+            callback.onProgress("5");
             Map<String, SkeletonData> skeletons = null;
             try {
                 // load joints
@@ -90,7 +91,7 @@ public final class ColladaLoader {
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
             Log.i("ColladaLoaderTask", "Loading geometries...");
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
-            callback.onProgress("Loading geometries...");
+            callback.onProgress("10");
             List<MeshData> meshDatas = null;
             try {
                 GeometryLoader g = new GeometryLoader(xml.getChild("library_geometries"));
@@ -100,7 +101,8 @@ public final class ColladaLoader {
 
                     // alert user if loading several meshes
                     if (geometries.size() > 1) {
-                        callback.onProgress("Loading geometries... " + (i + 1) + " / " + geometries.size());
+                        int pro = (int) (1.0f*(i + 1) / geometries.size() * 80);
+                        callback.onProgress((10+pro)+"");
                     }
 
                     // load next mesh
@@ -155,7 +157,7 @@ public final class ColladaLoader {
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
             Log.i("ColladaLoaderTask", "Loading materials...");
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
-            callback.onProgress("Loading materials...");
+            callback.onProgress("95");
             try {
                 final MaterialLoader materialLoader = new MaterialLoader(xml.getChild("library_materials"),
                         xml.getChild("library_effects"), xml.getChild("library_images"));
@@ -176,7 +178,7 @@ public final class ColladaLoader {
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
             Log.i("ColladaLoaderTask", "Loading visual scene...");
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
-            callback.onProgress("Loading visual scene...");
+            callback.onProgress("96");
             //SkeletonData jointsData = null;
             try {
                 // load joints
@@ -262,7 +264,7 @@ public final class ColladaLoader {
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
             Log.i("ColladaLoaderTask", "Loading textures...");
             Log.i("ColladaLoaderTask", "--------------------------------------------------");
-            callback.onProgress("Loading textures...");
+            callback.onProgress("97");
             try {
                 for (int i = 0; i < meshDatas.size(); i++) {
                     final MeshData meshData = meshDatas.get(i);
@@ -306,7 +308,7 @@ public final class ColladaLoader {
                 if (library_controllers != null && !library_controllers.getChildren("controller").isEmpty()) {
 
                     // notify user
-                    callback.onProgress("Loading skinning data...");
+                    callback.onProgress("98");
 
                     // load skin data
                     SkinLoader skinLoader = new SkinLoader(library_controllers, 3);
@@ -343,7 +345,7 @@ public final class ColladaLoader {
                     Log.i("ColladaLoaderTask", "--------------------------------------------------");
 
                     // notify user
-                    callback.onProgress("Loading joints...");
+                    callback.onProgress("99");
 
                     // update joint indices
                     // - skinning needs joint indices because auto-generated skinning rely on joint indices
@@ -391,7 +393,7 @@ public final class ColladaLoader {
                     Log.i("ColladaLoaderTask", "--------------------------------------------------");
 
                     // notify user
-                    callback.onProgress("Loading animation...");
+                    callback.onProgress("100");
 
                     // load animation
                     final Animation animation = loader.load();

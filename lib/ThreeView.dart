@@ -2,8 +2,12 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:threemodelviewer/threemodelviewer.dart';
+
+import 'StatusInfo.dart';
 
 /// Created by robot on 2022/3/26 12:52.
 /// Container(
@@ -28,7 +32,7 @@ import 'package:path_provider/path_provider.dart';
 ///   color: Colors.green,
 ///   child: const ThreeView(
 ///     src: "assets/ship.obj",
-///     modelType: ModelType.file,
+///     modelType: ModelType.assets,
 ///     srcDrawable: [
 ///       "assets/ship.bmp",
 ///       "assets/ship.mtl",
@@ -49,8 +53,10 @@ import 'package:path_provider/path_provider.dart';
 ///            ),
 /// @author robot < robot >
 
+
 class ThreeView extends StatefulWidget {
-  final Function(int type,int progress)? loadCallback;
+  ///支持安卓，不支持ios
+  final Function(StatusInfo)? loadCallback;
   final String src;
   final List<String>? srcDrawable;
   final ModelType modelType;
@@ -83,6 +89,16 @@ class ThreeView extends StatefulWidget {
 class ThreeViewState extends State<ThreeView> {
   final String viewType = "3dModelViewer";
   Map<String ,String> srcDrawableUris = {};
+  final ValueNotifier<StatusInfo> _status = ValueNotifier<StatusInfo>(StatusInfo(status: "",info: ""));
+  @override
+  void initState() {
+    super.initState();
+    Threemodelviewer.init();
+    Threemodelviewer.statusController.stream.listen((event) {
+      _status.value = event;
+      widget.loadCallback?.call(event);
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Uri>(
@@ -91,41 +107,71 @@ class ThreeViewState extends State<ThreeView> {
       builder: (BuildContext context, AsyncSnapshot<Uri> snapshot) {
         if (snapshot.data != null && snapshot.connectionState == ConnectionState.done) {
           if(Platform.isAndroid){
-            ///0 = obj, 1 = stl, 2 = dae
-            int type = -1;
-            if(snapshot.data.toString().toLowerCase().endsWith("obj")){
-              type = 0;
-            }else if(snapshot.data.toString().toLowerCase().endsWith("stl")){
-              type = 1;
-            }else if(snapshot.data.toString().toLowerCase().endsWith("dae")){
-              type = 2;
-            }
-            return AndroidView(
-              viewType: viewType,
-              creationParams: <String, dynamic>{
-                'src': snapshot.data.toString(),
-                'type':type,
-                'enableTouch':widget.enableTouch,
-                'srcDrawable':srcDrawableUris,
-              },
-              creationParamsCodec: const StandardMessageCodec(),
-            );
+            return _getAndroidView(snapshot.data.toString());
           }else if(Platform.isIOS){
-            return UiKitView(
-              viewType: viewType,
-              creationParams: <String, dynamic>{
-                'src': snapshot.data,
-                'type':snapshot.data.toString().toLowerCase(),
-                'enableTouch':widget.enableTouch,
-                'srcDrawable':srcDrawableUris,
-              },
-              creationParamsCodec: const StandardMessageCodec(),
-            );
+            return _getIosView(snapshot.data.toString());
           }
         }
-
-        return widget.placeholder ?? const Center(child: CupertinoActivityIndicator(),);
+        return Center(child: widget.placeholder ?? const CupertinoActivityIndicator(),);
       },
+    );
+  }
+
+  Widget _getIosView(String data){
+    return UiKitView(
+      viewType: viewType,
+      creationParams: <String, dynamic>{
+        'src': data,
+        'type': data.toLowerCase(),
+        'enableTouch':widget.enableTouch,
+        'srcDrawable':srcDrawableUris,
+      },
+      creationParamsCodec: const StandardMessageCodec(),
+    );
+  }
+
+
+  Widget _getAndroidView(String data){
+    ///0 = obj, 1 = stl, 2 = dae
+    int type = -1;
+    if(data.toLowerCase().endsWith("obj")){
+      type = 0;
+    }else if(data.toLowerCase().endsWith("stl")){
+      type = 1;
+    }else if(data.toLowerCase().endsWith("dae")){
+      type = 2;
+    }
+    return Stack(
+      children: [
+        ValueListenableBuilder(valueListenable: _status, builder: (BuildContext context, StatusInfo value, Widget? child) {
+          if(value.status == Status.onLoadComplete.name){
+            Threemodelviewer.enableTouch(widget.enableTouch);
+            return const SizedBox();
+          }else {
+            return Center(
+              child: widget.placeholder ?? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CupertinoActivityIndicator(),
+                  const SizedBox(height: 10,),
+                  Text(value.status == Status.onProgress.name ?value.info.toString() + "%":value.info ?? "",style: const TextStyle(fontSize: 14,color: Colors.grey),)
+                ],
+              ),
+            );
+          }
+        }),
+
+        AndroidView(
+          viewType: viewType,
+          creationParams: <String, dynamic>{
+            'src': data,
+            'type':type,
+            'enableTouch': false,
+            'srcDrawable':srcDrawableUris,
+          },
+          creationParamsCodec: const StandardMessageCodec(),
+        ),
+      ],
     );
   }
   CancelToken? _cancelToken;
@@ -150,7 +196,6 @@ class ThreeViewState extends State<ThreeView> {
 
   ///返回文件路径 uri
   Future<Uri> getSrcByModelType() async {
-
     if(widget.modelType == ModelType.assets){
       ///assets
 
@@ -227,6 +272,7 @@ class ThreeViewState extends State<ThreeView> {
   @override
   void dispose() {
     super.dispose();
+    Threemodelviewer.statusController.close();
     if (_cancelToken != null && !_cancelToken!.isCancelled) {
       _cancelToken!.cancel('');
     }
@@ -238,3 +284,4 @@ enum ModelType {
   assets,
   http,
 }
+

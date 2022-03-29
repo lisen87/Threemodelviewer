@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.util.Map;
 
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
@@ -16,12 +17,14 @@ import io.flutter.plugin.platform.PlatformViewFactory;
 
 public class ThreeDModelViewerFactory extends PlatformViewFactory {
 
-    public ThreeDModelViewerFactory(MessageCodec<Object> createArgsCodec) {
+    private BinaryMessenger messenger;
+    public ThreeDModelViewerFactory(BinaryMessenger messenger,MessageCodec<Object> createArgsCodec) {
         super(createArgsCodec);
+        this.messenger = messenger;
     }
 
     @Override
     public PlatformView create(Context context, int viewId, Object args) {
-        return new ThreeDView(context, (Map<String, Object>) args);
+        return new ThreeDView(context,messenger, (Map<String, Object>) args);
     }
 }

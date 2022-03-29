@@ -593,10 +593,18 @@ public class SceneLoader implements LoadListener, EventListener {
     public final boolean isBlendingForced() {
         return isBlendingForced;
     }
+    private LoadListener callback;
+
+    public void setCallback(LoadListener callback) {
+        this.callback = callback;
+    }
 
     @Override
     public void onStart() {
 
+        if (callback != null){
+            callback.onStart();
+        }
         // mark start time
         startTime = SystemClock.uptimeMillis();
 
@@ -606,11 +614,16 @@ public class SceneLoader implements LoadListener, EventListener {
 
     @Override
     public void onProgress(String progress) {
+        if (callback != null){
+            callback.onProgress(progress);
+        }
     }
 
     @Override
     public synchronized void onLoad(Object3DData data) {
-
+        if (callback != null){
+            callback.onLoad(data);
+        }
         // if we add object, we need to initialize Animation, otherwise ModelRenderer will crash
         if (doAnimation) {
             animator.update(data, isShowBindPose());
@@ -650,6 +663,10 @@ public class SceneLoader implements LoadListener, EventListener {
 
         // fix coordinate system
         fixCoordinateSystem();
+
+        if (callback != null){
+            callback.onLoadComplete();
+        }
     }
 
     private void rescale(List<Object3DData> objs) {
@@ -681,6 +698,9 @@ public class SceneLoader implements LoadListener, EventListener {
         Log.e("SceneLoader", ex.getMessage(), ex);
         makeToastText("There was a problem building the model: " + ex.getMessage(), Toast.LENGTH_LONG);
         ContentUtils.setThreadActivity(null);
+        if (callback != null){
+            callback.onLoadError(ex);
+        }
     }
 
     public Object3DData getSelectedObject() {
