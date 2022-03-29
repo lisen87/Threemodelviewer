@@ -32,7 +32,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.threemodelviewer.threemodelviewer
+        package: com.leeson.ddd
         pluginClass: ThreeModelViewerPlugin
       ios:
         pluginClass: ThreeModelViewerPlugin

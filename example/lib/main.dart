@@ -55,8 +55,8 @@ class _MyAppState extends State<MyApp> {
             //   ),
             // ),
             Container(
-              height: 200,
-              width: 200,
+              height: 500,
+              width: 500,
               color: Colors.blue,
               child:  ThreeView(
                 src: "assets/ship.obj",
