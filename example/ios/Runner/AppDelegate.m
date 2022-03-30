@@ -3,7 +3,6 @@
 #import <threemodelviewer/FlutterActivityIndicatorFactory.h>
 #import <threemodelviewer/ThreeModelViewerPlugin.h>
 #import <Flutter/Flutter.h>
-#import "ViewController.h"
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application
