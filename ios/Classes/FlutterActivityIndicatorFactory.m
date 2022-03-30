@@ -26,8 +26,8 @@
 
 }
 -(NSObject<FlutterPlatformView> *)createWithFrame:(CGRect)frame viewIdentifier:(int64_t)viewId arguments:(id)args{
-    NSLog(@"宽度%f",frame.size.width);
-    NSLog(@"高度%f",frame.size.height);
+//    NSLog(@"宽度%f",frame.size.width);
+//    NSLog(@"高度%f",frame.size.height);
 
     XTSceneView *scence = [[XTSceneView alloc] initWithWithFrame:frame viewIdentifier:viewId arguments:args binaryMessenger:_messenger];
     return scence;

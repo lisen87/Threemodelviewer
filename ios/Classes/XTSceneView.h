@@ -13,9 +13,9 @@
 
 @interface XTSceneView : NSObject<FlutterPlatformView>
 
+@property (nonatomic, copy) void (^blockChangeTouchStatusClick)(BOOL isTouch);/**< 按钮block*/
 
 @property (nonatomic, strong) SCNNode *node;
-@property (nonatomic, strong) UIView *returnView;
 @property (nonatomic, strong)SCNView *scnView;
 @property (nonatomic, strong) NSDictionary *argsDic;
 

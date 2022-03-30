@@ -10,6 +10,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface FlutterActivityIndicatorFactory : NSObject<FlutterPlatformViewFactory>
+@property (nonatomic, copy) void (^blockChangeTouchStatusClick)(BOOL isTouch);/**< 按钮block*/
+
 - (instancetype)initWithMessenger:(NSObject<FlutterBinaryMessenger>*)messager;
 
 @end

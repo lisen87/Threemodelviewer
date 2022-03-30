@@ -23,22 +23,36 @@
     if (self = [super init]) {
         _argsDic =[NSDictionary dictionary];
         _argsDic =args;
-        self.returnView =[[UIView alloc]init];
-        self.returnView.backgroundColor =[UIColor redColor];
-        
+
+        [[NSNotificationCenter defaultCenter]
+        addObserver:self selector:@selector(getNotificationAction:) name:@"enableTouch" object:nil];
         [self createScene];
     }
     
     return self;
     
 }
-
+- (void)getNotificationAction:(NSNotification *)notification{
+    NSDictionary * infoDic = [notification object];
+    // 这样就得到了我们在发送通知时候传入的字典了
+    if([[infoDic objectForKey:@"enableTouch"] isEqualToString:@"1"]){
+        self.scnView.userInteractionEnabled=YES;
+    }else{
+        self.scnView.userInteractionEnabled=NO;
+    }
+}
 #pragma mark - 创建3D模型场景
 - (void)createScene {
     
     NSString *tmpPaht = _argsDic[@"src"];
     NSFileManager* fm=[NSFileManager defaultManager];
-    NSString *subString = [tmpPaht substringFromIndex:7];
+    NSString *subString = @"";
+    if(tmpPaht.length<8){
+
+    }else{
+        subString = [tmpPaht substringFromIndex:7];
+
+    }
     BOOL isExist =[fm fileExistsAtPath:subString];
     NSError*ERROR =nil;
 
@@ -62,12 +76,11 @@
     // 设置场景
     self.scnView.scene = scene;
     // 设置背景
-    self.scnView.backgroundColor = [UIColor yellowColor];
+    self.scnView.backgroundColor = [UIColor clearColor];
     // 允许控制摄像机位置
     self.scnView.allowsCameraControl = YES;
     // 不显示数据控制台
     self.scnView.showsStatistics = NO;
-    self.scnView.userInteractionEnabled=NO;
 
 }
 //5.动画自我旋转
@@ -80,14 +93,8 @@
 
 }
 -(UIView *)view{
-    [self.returnView addSubview:self.scnView];
 
-    RUN_AFTER(0.1, ^(){
-        NSLog(@"宽度%f",self.returnView.frame.size.width);
-        NSLog(@"高度%f",self.returnView.frame.size.height);
-        self.scnView .frame=self.returnView.frame;
-    });
-    return self.returnView;
+    return self.scnView ;
 
 }
 
