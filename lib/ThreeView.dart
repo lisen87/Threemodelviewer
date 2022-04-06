@@ -273,7 +273,7 @@ class ThreeViewState extends State<ThreeView> {
   @override
   void dispose() {
     super.dispose();
-    /// Threemodelviewer.statusController.close();
+    Threemodelviewer().statusController.close();
     if (_cancelToken != null && !_cancelToken!.isCancelled) {
       _cancelToken!.cancel('');
     }
