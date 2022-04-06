@@ -90,11 +90,12 @@ class ThreeViewState extends State<ThreeView> {
   final String viewType = "3dModelViewer";
   Map<String ,String> srcDrawableUris = {};
   final ValueNotifier<StatusInfo> _status = ValueNotifier<StatusInfo>(StatusInfo(status: "",info: ""));
+  Threemodelviewer threemodelviewer = Threemodelviewer();
   @override
   void initState() {
     super.initState();
-    Threemodelviewer.init();
-    Threemodelviewer.statusController.stream.listen((event) {
+    threemodelviewer.init();
+    threemodelviewer.statusController.stream.listen((event) {
       _status.value = event;
       widget.loadCallback?.call(event);
     });
@@ -145,7 +146,7 @@ class ThreeViewState extends State<ThreeView> {
       children: [
         ValueListenableBuilder(valueListenable: _status, builder: (BuildContext context, StatusInfo value, Widget? child) {
           if(value.status == Status.onLoadComplete.name){
-            Threemodelviewer.enableTouch(widget.enableTouch);
+            threemodelviewer.enableTouch(widget.enableTouch);
             return const SizedBox();
           }else {
             return Center(

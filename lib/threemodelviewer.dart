@@ -5,20 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:threemodelviewer/StatusInfo.dart';
 
 class Threemodelviewer {
-  static const MethodChannel _channel = MethodChannel('ThreeModelViewerPlugin');
+  late MethodChannel _channel;
 
-  static Future<String?> get platformVersion async {
-    final String? version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-
-  static enableTouch(bool enable) {
+  enableTouch(bool enable) {
     _channel.invokeMethod('enableTouch', {"enableTouch": enable});
   }
 
-  static final StreamController<StatusInfo> statusController = StreamController<StatusInfo>.broadcast();
+  late StreamController<StatusInfo> statusController;
 
-  static init() {
+  init() {
+    statusController = StreamController<StatusInfo>.broadcast();
+    _channel = const MethodChannel('ThreeModelViewerPlugin');
     _channel.setMethodCallHandler((call) async {
       StatusInfo statusInfo = StatusInfo(status: call.method.toString(),info: call.arguments);
       statusController.add(statusInfo);
