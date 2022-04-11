@@ -199,10 +199,30 @@ class ThreeViewState extends State<ThreeView> {
   Future<Uri> getSrcByModelType() async {
     if(widget.modelType == ModelType.assets){
       ///assets
-
+      Directory dir = await getTemporaryDirectory();
       if(widget.srcDrawable != null){
-        for (String element in widget.srcDrawable!) {
-          _copy(element);
+        for(int i = 0; i < widget.srcDrawable!.length;i++){
+          String assetsName = widget.srcDrawable![i];
+          String fileName = assetsName;
+          if(assetsName.contains("/")){
+            fileName = assetsName.split("/").last;
+          }
+
+          File f = File(dir.path+"/models/"+fileName);
+          bool exists = await f.exists();
+          if(!exists || await f.length() == 0){
+            try{
+              var bytes = await rootBundle.load(assetsName);
+              final buffer = bytes.buffer;
+              await f.create(recursive: true);
+              await f.writeAsBytes(
+                  buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
+            }catch(e){
+              print("不存在的assets= " + e.toString());
+              continue;
+            }
+          }
+          srcDrawableUris[fileName] = f.uri.toString();
         }
       }
 
@@ -212,12 +232,11 @@ class ThreeViewState extends State<ThreeView> {
         fileName = widget.src.split("/").last;
       }
 
-      Directory dir = await getTemporaryDirectory();
       File f = File(dir.path+"/models/"+fileName);
       if(await f.exists() && await f.length() > 0){
         return f.uri;
       }else{
-        f.create(recursive: true);
+        await f.create(recursive: true);
         var bytes = await rootBundle.load(widget.src);
         final buffer = bytes.buffer;
         await f.writeAsBytes(

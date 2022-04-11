@@ -127,7 +127,7 @@ class GLES20Renderer implements Renderer {
 
         // log event once
         if (id != flags.get(obj.getId())) {
-            Log.d("GLES20Renderer", "Rendering with shader: " + id + "vert... obj: " + obj);
+//            Log.d("GLES20Renderer", "Rendering with shader: " + id + "vert... obj: " + obj);
             flags.put(obj.getId(), this.id);
         }
 
